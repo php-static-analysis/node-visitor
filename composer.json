@@ -1,0 +1,59 @@
+{
+    "name": "php-static-analysis/node-visitor",
+    "description": "PHP parser node visitor that converts Attributes into PHPDoc annotations",
+    "type": "library",
+    "keywords": ["dev", "static analysis"],
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "PhpStaticAnalysis\\NodeVisitor\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "test\\PhpStaticAnalysis\\NodeVisitor\\": "tests/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Carlos Granados",
+            "email": "carlos@fastdebug.io"
+        }
+    ],
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "require": {
+        "php": ">=8.0",
+        "nikic/php-parser": "^4 || ^5",
+        "php-static-analysis/attributes": "^0.1 || dev-main"
+    },
+    "require-dev": {
+        "php-static-analysis/phpstan-extension": "dev-main",
+        "php-static-analysis/psalm-plugin": "dev-main",
+        "phpstan/extension-installer": "^1.3",
+        "phpstan/phpstan": "^1.8",
+        "phpunit/phpunit": "^9.0",
+        "psalm/plugin-phpunit": "^0.18.4",
+        "symplify/easy-coding-standard": "^12.1",
+        "vimeo/psalm": "^5"
+    },
+    "scripts": {
+        "phpstan": "phpstan analyse",
+        "ecs": "ecs",
+        "ecs-fix": "ecs --fix",
+        "phpunit": "phpunit",
+        "psalm": "psalm",
+        "tests": [
+            "@ecs",
+            "@phpstan",
+            "@phpunit",
+            "@psalm"
+        ]
+    },
+    "config": {
+        "allow-plugins": {
+            "phpstan/extension-installer": true
+        },
+        "sort-packages": true
+    }
+}
