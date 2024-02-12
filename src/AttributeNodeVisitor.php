@@ -152,6 +152,35 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
                     }
                 }
             }
+            if ($node instanceof Stmt\ClassMethod || $node instanceof Stmt\Function_) {
+                foreach ($node->getParams() as $param) {
+                    $attributeGroups = $param->attrGroups;
+                    foreach ($attributeGroups as $attributeGroup) {
+                        $attributes = $attributeGroup->attrs;
+                        foreach ($attributes as $attribute) {
+                            $attributeName = $attribute->name->toString();
+                            $attributeName = self::SHORT_NAME_TO_FQN[$attributeName] ?? $attributeName;
+                            if ($attributeName === Param::class) {
+                                $args = $attribute->args;
+                                $tagCreated = false;
+                                if (isset($args[0])) {
+                                    $var = $param->var;
+                                    if ($var instanceof Node\Expr\Variable) {
+                                        $name = $var->name;
+                                        if (is_string($name)) {
+                                            $tagsToAdd[] = $this->createTag($attributeName, $args[0], useName: true, nameToUse: $name);
+                                            $tagCreated = true;
+                                        }
+                                    }
+                                }
+                                if ($tagCreated) {
+                                    $this->updatePositions($attribute);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
             if ($tagsToAdd !== []) {
                 $this->addDocTagsToNode($tagsToAdd, $node);
             }
@@ -163,7 +192,8 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
         string $attributeName,
         Arg $argument = null,
         Arg $of = null,
-        bool $useName = false
+        bool $useName = false,
+        string $nameToUse = null
     ): string {
         $tag = '@' . self::ANNOTATION_PER_ATTRIBUTE[$attributeName];
         if ($argument) {
@@ -180,13 +210,17 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
                 }
             }
             if ($useName) {
-                $name = $argument->name;
-                if ($name instanceof Node\Identifier) {
+                if ($nameToUse === null) {
+                    $nameToUse = $argument->name;
+                } else {
+                    $nameToUse = new Node\Identifier($nameToUse);
+                }
+                if ($nameToUse instanceof Node\Identifier) {
                     //we only add a space if it is not a variadic parameter
                     if (!str_ends_with($type, '...')) {
                         $tag .= ' ';
                     }
-                    $tag .= '$' . $name->toString();
+                    $tag .= '$' . $nameToUse->toString();
                 }
             }
         }
