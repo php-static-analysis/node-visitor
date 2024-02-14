@@ -13,6 +13,7 @@ use PhpParser\Node\Stmt;
 use PhpParser\NodeVisitorAbstract;
 use PhpStaticAnalysis\Attributes\IsReadOnly;
 use PhpStaticAnalysis\Attributes\Param;
+use PhpStaticAnalysis\Attributes\Property;
 use PhpStaticAnalysis\Attributes\Returns;
 use PhpStaticAnalysis\Attributes\Template;
 use PhpStaticAnalysis\Attributes\Type;
@@ -36,6 +37,7 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
 
     private const ALLOWED_ATTRIBUTES_PER_NODE_TYPE = [
         Stmt\Class_::class => [
+            Property::class,
             Template::class,
         ],
         Stmt\ClassConst::class => [
@@ -57,8 +59,9 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
             Template::class,
         ],
         Stmt\Property::class => [
-            Type::class,
             IsReadOnly::class,
+            Property::class,
+            Type::class,
         ],
         Stmt\Trait_::class => [
             Template::class,
@@ -68,6 +71,7 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
     private const SHORT_NAME_TO_FQN = [
         'IsReadOnly' => IsReadOnly::class,
         'Param' => Param::class,
+        'Property' => Property::class,
         'Returns' => Returns::class,
         'Template' => Template::class,
         'Type' => Type::class,
@@ -80,6 +84,10 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
         Param::class => [
                 'all' => 'param',
             ],
+        Property::class => [
+            Stmt\Class_::class => 'property',
+            Stmt\Property::class => 'var',
+        ],
         Returns::class => [
                 'all' => 'return',
             ],
@@ -95,11 +103,25 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
     ];
 
     private const ARGUMENTS_PER_ATTRIBUTE = [
-        IsReadOnly::class => self::ARGS_NONE,
-        Param::class => self::ARGS_MANY_WITH_NAME,
-        Returns::class => self::ARGS_ONE,
-        Template::class => self::ARGS_TWO_WITH_TYPE,
-        Type::class => self::ARGS_ONE
+        IsReadOnly::class => [
+            'all' => self::ARGS_NONE,
+        ],
+        Param::class => [
+            'all' => self::ARGS_MANY_WITH_NAME,
+        ],
+        Property::class => [
+            Stmt\Class_::class => self::ARGS_MANY_WITH_NAME,
+            Stmt\Property::class => self::ARGS_ONE,
+        ],
+        Returns::class => [
+            'all' => self::ARGS_ONE,
+        ],
+        Template::class => [
+            'all' => self::ARGS_TWO_WITH_TYPE,
+        ],
+        Type::class => [
+            'all' => self::ARGS_ONE
+        ],
     ];
 
     private int $startLine;
@@ -117,7 +139,7 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
     public function enterNode(Node $node)
     {
         if (in_array($node::class, self::ALLOWED_NODE_TYPES)) {
-            /** @var Stmt\Class_|Stmt\ClassMethod|Stmt\Function_|Stmt\Interface_|Stmt\Property|Stmt\Trait_ $node */
+            /** @var Stmt\Class_|Stmt\ClassConst|Stmt\ClassMethod|Stmt\Function_|Stmt\Interface_|Stmt\Property|Stmt\Trait_ $node */
             $tagsToAdd = [];
             $attributeGroups = $node->attrGroups;
             $nodeType = $node::class;
@@ -137,7 +159,15 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
                     ) {
                         $args = $attribute->args;
                         $tagCreated = false;
-                        switch (self::ARGUMENTS_PER_ATTRIBUTE[$attributeName]) {
+
+                        if (array_key_exists($nodeType, self::ARGUMENTS_PER_ATTRIBUTE[$attributeName])) {
+                            $argumentType = self::ARGUMENTS_PER_ATTRIBUTE[$attributeName][$nodeType];
+                        } elseif (array_key_exists('all', self::ARGUMENTS_PER_ATTRIBUTE[$attributeName])) {
+                            $argumentType = self::ARGUMENTS_PER_ATTRIBUTE[$attributeName]['all'];
+                        } else {
+                            continue;
+                        }
+                        switch ($argumentType) {
                             case self::ARGS_NONE:
                                 $tagsToAdd[] = $this->createTag($nodeType, $attributeName);
                                 $tagCreated = true;
@@ -211,9 +241,9 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
         bool $useName = false,
         string $nameToUse = null
     ): string {
-        if (isset(self::ANNOTATION_PER_ATTRIBUTE[$attributeName][$nodeType])) {
+        if (array_key_exists($nodeType, self::ANNOTATION_PER_ATTRIBUTE[$attributeName])) {
             $tagName = self::ANNOTATION_PER_ATTRIBUTE[$attributeName][$nodeType];
-        } elseif (isset(self::ANNOTATION_PER_ATTRIBUTE[$attributeName]['all'])) {
+        } elseif (array_key_exists('all', self::ANNOTATION_PER_ATTRIBUTE[$attributeName])) {
             $tagName = self::ANNOTATION_PER_ATTRIBUTE[$attributeName]['all'];
         } else {
             return '';
