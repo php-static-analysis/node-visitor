@@ -45,11 +45,13 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
             Param::class,
             Returns::class,
             Template::class,
+            Type::class,
         ],
         Stmt\Function_::class => [
             Param::class,
             Returns::class,
             Template::class,
+            Type::class,
         ],
         Stmt\Interface_::class => [
             Template::class,
@@ -72,11 +74,24 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
     ];
 
     private const ANNOTATION_PER_ATTRIBUTE = [
-        IsReadOnly::class => 'readonly',
-        Param::class => 'param',
-        Returns::class => 'return',
-        Template::class => 'template',
-        Type::class => 'var',
+        IsReadOnly::class => [
+                'all' => 'readonly',
+            ],
+        Param::class => [
+                'all' => 'param',
+            ],
+        Returns::class => [
+                'all' => 'return',
+            ],
+        Template::class => [
+                'all' => 'template',
+            ],
+        Type::class => [
+                Stmt\ClassConst::class => 'var',
+                Stmt\ClassMethod::class => 'return',
+                Stmt\Function_::class => 'return',
+                Stmt\Property::class => 'var',
+            ],
     ];
 
     private const ARGUMENTS_PER_ATTRIBUTE = [
@@ -124,24 +139,24 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
                         $tagCreated = false;
                         switch (self::ARGUMENTS_PER_ATTRIBUTE[$attributeName]) {
                             case self::ARGS_NONE:
-                                $tagsToAdd[] = $this->createTag($attributeName);
+                                $tagsToAdd[] = $this->createTag($nodeType, $attributeName);
                                 $tagCreated = true;
                                 break;
                             case self::ARGS_ONE:
                                 if (isset($args[0])) {
-                                    $tagsToAdd[] = $this->createTag($attributeName, $args[0]);
+                                    $tagsToAdd[] = $this->createTag($nodeType, $attributeName, $args[0]);
                                     $tagCreated = true;
                                 }
                                 break;
                             case self::ARGS_TWO_WITH_TYPE:
                                 if (isset($args[0])) {
-                                    $tagsToAdd[] = $this->createTag($attributeName, $args[0], $args[1] ?? null);
+                                    $tagsToAdd[] = $this->createTag($nodeType, $attributeName, $args[0], $args[1] ?? null);
                                     $tagCreated = true;
                                 }
                                 break;
                             case self::ARGS_MANY_WITH_NAME:
                                 foreach ($args as $arg) {
-                                    $tagsToAdd[] = $this->createTag($attributeName, $arg, useName: true);
+                                    $tagsToAdd[] = $this->createTag($nodeType, $attributeName, $arg, useName: true);
                                     $tagCreated = true;
                                 }
                                 break;
@@ -168,7 +183,7 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
                                     if ($var instanceof Node\Expr\Variable) {
                                         $name = $var->name;
                                         if (is_string($name)) {
-                                            $tagsToAdd[] = $this->createTag($attributeName, $args[0], useName: true, nameToUse: $name);
+                                            $tagsToAdd[] = $this->createTag($nodeType, $attributeName, $args[0], useName: true, nameToUse: $name);
                                             $tagCreated = true;
                                         }
                                     }
@@ -189,13 +204,21 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
     }
 
     private function createTag(
+        string $nodeType,
         string $attributeName,
         Arg $argument = null,
         Arg $of = null,
         bool $useName = false,
         string $nameToUse = null
     ): string {
-        $tag = '@' . self::ANNOTATION_PER_ATTRIBUTE[$attributeName];
+        if (isset(self::ANNOTATION_PER_ATTRIBUTE[$attributeName][$nodeType])) {
+            $tagName = self::ANNOTATION_PER_ATTRIBUTE[$attributeName][$nodeType];
+        } elseif (isset(self::ANNOTATION_PER_ATTRIBUTE[$attributeName]['all'])) {
+            $tagName = self::ANNOTATION_PER_ATTRIBUTE[$attributeName]['all'];
+        } else {
+            return '';
+        }
+        $tag = '@' . $tagName;
         if ($argument) {
             $value = $argument->value;
             $type = '';

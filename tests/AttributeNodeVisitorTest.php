@@ -93,6 +93,15 @@ class AttributeNodeVisitorTest extends TestCase
         $this->assertEquals("/**\n * @var string\n */", $docText);
     }
 
+    public function testAddsReturnPHPDocWithTypeAttribute(): void
+    {
+        $node = new Node\Stmt\ClassMethod('Test');
+        $this->addTypeAttributeToNode($node);
+        $this->nodeVisitor->enterNode($node);
+        $docText = $this->getDocText($node);
+        $this->assertEquals("/**\n * @return string\n */", $docText);
+    }
+
     public function testAddsTemplatePHPDoc(): void
     {
         $node = new Node\Stmt\Class_('Test');
@@ -184,7 +193,7 @@ class AttributeNodeVisitorTest extends TestCase
         $node->attrGroups = [new AttributeGroup([$attribute])];
     }
 
-    private function addTypeAttributeToNode(Node\Stmt\Property $node): void
+    private function addTypeAttributeToNode(Node\Stmt\Property|Node\Stmt\ClassMethod $node): void
     {
         $args = [
             new Node\Arg(new Node\Scalar\String_('string'))
