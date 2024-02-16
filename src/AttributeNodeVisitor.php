@@ -14,6 +14,8 @@ use PhpParser\NodeVisitorAbstract;
 use PhpStaticAnalysis\Attributes\IsReadOnly;
 use PhpStaticAnalysis\Attributes\Param;
 use PhpStaticAnalysis\Attributes\Property;
+use PhpStaticAnalysis\Attributes\PropertyRead;
+use PhpStaticAnalysis\Attributes\PropertyWrite;
 use PhpStaticAnalysis\Attributes\Returns;
 use PhpStaticAnalysis\Attributes\Template;
 use PhpStaticAnalysis\Attributes\Type;
@@ -38,6 +40,8 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
     private const ALLOWED_ATTRIBUTES_PER_NODE_TYPE = [
         Stmt\Class_::class => [
             Property::class,
+            PropertyRead::class,
+            PropertyWrite::class,
             Template::class,
         ],
         Stmt\ClassConst::class => [
@@ -72,6 +76,8 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
         'IsReadOnly' => IsReadOnly::class,
         'Param' => Param::class,
         'Property' => Property::class,
+        'PropertyRead' => PropertyRead::class,
+        'PropertyWrite' => PropertyWrite::class,
         'Returns' => Returns::class,
         'Template' => Template::class,
         'Type' => Type::class,
@@ -87,6 +93,12 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
         Property::class => [
             Stmt\Class_::class => 'property',
             Stmt\Property::class => 'var',
+        ],
+        PropertyRead::class => [
+            'all' => 'property-read',
+        ],
+        PropertyWrite::class => [
+            'all' => 'property-write',
         ],
         Returns::class => [
                 'all' => 'return',
@@ -112,6 +124,12 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
         Property::class => [
             Stmt\Class_::class => self::ARGS_MANY_WITH_NAME,
             Stmt\Property::class => self::ARGS_ONE,
+        ],
+        PropertyRead::class => [
+            Stmt\Class_::class => self::ARGS_MANY_WITH_NAME,
+        ],
+        PropertyWrite::class => [
+            Stmt\Class_::class => self::ARGS_MANY_WITH_NAME,
         ],
         Returns::class => [
             'all' => self::ARGS_ONE,
