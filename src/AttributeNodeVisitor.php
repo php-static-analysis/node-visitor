@@ -12,6 +12,7 @@ use PhpParser\Node\Scalar\String_;
 use PhpParser\Node\Stmt;
 use PhpParser\NodeVisitorAbstract;
 use PhpStaticAnalysis\Attributes\IsReadOnly;
+use PhpStaticAnalysis\Attributes\Method;
 use PhpStaticAnalysis\Attributes\Param;
 use PhpStaticAnalysis\Attributes\Property;
 use PhpStaticAnalysis\Attributes\PropertyRead;
@@ -28,6 +29,7 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
     private const ARGS_ONE = 'one';
     private const ARGS_TWO_WITH_TYPE = 'two with type';
     private const ARGS_MANY_WITH_NAME = "many with name";
+    private const ARGS_MANY_WITHOUT_NAME = "many without name";
 
     private const ALLOWED_NODE_TYPES = [
         Stmt\Class_::class,
@@ -41,6 +43,7 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
 
     private const ALLOWED_ATTRIBUTES_PER_NODE_TYPE = [
         Stmt\Class_::class => [
+            Method::class,
             Property::class,
             PropertyRead::class,
             PropertyWrite::class,
@@ -64,6 +67,7 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
             Type::class,
         ],
         Stmt\Interface_::class => [
+            Method::class,
             Property::class,
             PropertyRead::class,
             PropertyWrite::class,
@@ -77,6 +81,7 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
             Type::class,
         ],
         Stmt\Trait_::class => [
+            Method::class,
             Property::class,
             PropertyRead::class,
             PropertyWrite::class,
@@ -88,6 +93,7 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
 
     private const SHORT_NAME_TO_FQN = [
         'IsReadOnly' => IsReadOnly::class,
+        'Method' => Method::class,
         'Param' => Param::class,
         'Property' => Property::class,
         'PropertyRead' => PropertyRead::class,
@@ -101,11 +107,14 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
 
     private const ANNOTATION_PER_ATTRIBUTE = [
         IsReadOnly::class => [
-                'all' => 'readonly',
-            ],
+            'all' => 'readonly',
+        ],
+        Method::class => [
+            'all' => 'method',
+        ],
         Param::class => [
-                'all' => 'param',
-            ],
+            'all' => 'param',
+        ],
         Property::class => [
             Stmt\Class_::class => 'property',
             Stmt\Property::class => 'var',
@@ -117,11 +126,11 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
             'all' => 'property-write',
         ],
         Returns::class => [
-                'all' => 'return',
-            ],
+            'all' => 'return',
+        ],
         Template::class => [
-                'all' => 'template',
-            ],
+            'all' => 'template',
+        ],
         TemplateContravariant::class => [
             'all' => 'template-contravariant',
         ],
@@ -129,16 +138,19 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
             'all' => 'template-covariant',
         ],
         Type::class => [
-                Stmt\ClassConst::class => 'var',
-                Stmt\ClassMethod::class => 'return',
-                Stmt\Function_::class => 'return',
-                Stmt\Property::class => 'var',
-            ],
+            Stmt\ClassConst::class => 'var',
+            Stmt\ClassMethod::class => 'return',
+            Stmt\Function_::class => 'return',
+            Stmt\Property::class => 'var',
+        ],
     ];
 
     private const ARGUMENTS_PER_ATTRIBUTE = [
         IsReadOnly::class => [
             'all' => self::ARGS_NONE,
+        ],
+        Method::class => [
+            'all' => self::ARGS_MANY_WITHOUT_NAME,
         ],
         Param::class => [
             'all' => self::ARGS_MANY_WITH_NAME,
@@ -233,6 +245,12 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
                             case self::ARGS_MANY_WITH_NAME:
                                 foreach ($args as $arg) {
                                     $tagsToAdd[] = $this->createTag($nodeType, $attributeName, $arg, useName: true);
+                                    $tagCreated = true;
+                                }
+                                break;
+                            case self::ARGS_MANY_WITHOUT_NAME:
+                                foreach ($args as $arg) {
+                                    $tagsToAdd[] = $this->createTag($nodeType, $attributeName, $arg, useName: false);
                                     $tagCreated = true;
                                 }
                                 break;
