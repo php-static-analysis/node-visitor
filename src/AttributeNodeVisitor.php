@@ -18,6 +18,8 @@ use PhpStaticAnalysis\Attributes\PropertyRead;
 use PhpStaticAnalysis\Attributes\PropertyWrite;
 use PhpStaticAnalysis\Attributes\Returns;
 use PhpStaticAnalysis\Attributes\Template;
+use PhpStaticAnalysis\Attributes\TemplateContravariant;
+use PhpStaticAnalysis\Attributes\TemplateCovariant;
 use PhpStaticAnalysis\Attributes\Type;
 
 class AttributeNodeVisitor extends NodeVisitorAbstract
@@ -43,6 +45,8 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
             PropertyRead::class,
             PropertyWrite::class,
             Template::class,
+            TemplateContravariant::class,
+            TemplateCovariant::class,
         ],
         Stmt\ClassConst::class => [
             Type::class,
@@ -60,7 +64,12 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
             Type::class,
         ],
         Stmt\Interface_::class => [
+            Property::class,
+            PropertyRead::class,
+            PropertyWrite::class,
             Template::class,
+            TemplateContravariant::class,
+            TemplateCovariant::class,
         ],
         Stmt\Property::class => [
             IsReadOnly::class,
@@ -68,7 +77,12 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
             Type::class,
         ],
         Stmt\Trait_::class => [
+            Property::class,
+            PropertyRead::class,
+            PropertyWrite::class,
             Template::class,
+            TemplateContravariant::class,
+            TemplateCovariant::class,
         ],
     ];
 
@@ -80,6 +94,8 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
         'PropertyWrite' => PropertyWrite::class,
         'Returns' => Returns::class,
         'Template' => Template::class,
+        'TemplateContravariant' => TemplateContravariant::class,
+        'TemplateCovariant' => TemplateCovariant::class,
         'Type' => Type::class,
     ];
 
@@ -106,6 +122,12 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
         Template::class => [
                 'all' => 'template',
             ],
+        TemplateContravariant::class => [
+            'all' => 'template-contravariant',
+        ],
+        TemplateCovariant::class => [
+            'all' => 'template-covariant',
+        ],
         Type::class => [
                 Stmt\ClassConst::class => 'var',
                 Stmt\ClassMethod::class => 'return',
@@ -126,15 +148,21 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
             Stmt\Property::class => self::ARGS_ONE,
         ],
         PropertyRead::class => [
-            Stmt\Class_::class => self::ARGS_MANY_WITH_NAME,
+            'all' => self::ARGS_MANY_WITH_NAME,
         ],
         PropertyWrite::class => [
-            Stmt\Class_::class => self::ARGS_MANY_WITH_NAME,
+            'all' => self::ARGS_MANY_WITH_NAME,
         ],
         Returns::class => [
             'all' => self::ARGS_ONE,
         ],
         Template::class => [
+            'all' => self::ARGS_TWO_WITH_TYPE,
+        ],
+        TemplateContravariant::class => [
+            'all' => self::ARGS_TWO_WITH_TYPE,
+        ],
+        TemplateCovariant::class => [
             'all' => self::ARGS_TWO_WITH_TYPE,
         ],
         Type::class => [
