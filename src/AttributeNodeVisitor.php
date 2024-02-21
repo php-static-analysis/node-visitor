@@ -11,6 +11,7 @@ use PhpParser\Node\Arg;
 use PhpParser\Node\Scalar\String_;
 use PhpParser\Node\Stmt;
 use PhpParser\NodeVisitorAbstract;
+use PhpStaticAnalysis\Attributes\Deprecated;
 use PhpStaticAnalysis\Attributes\IsReadOnly;
 use PhpStaticAnalysis\Attributes\Method;
 use PhpStaticAnalysis\Attributes\Param;
@@ -43,6 +44,7 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
 
     private const ALLOWED_ATTRIBUTES_PER_NODE_TYPE = [
         Stmt\Class_::class => [
+            Deprecated::class,
             Method::class,
             Property::class,
             PropertyRead::class,
@@ -52,21 +54,25 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
             TemplateCovariant::class,
         ],
         Stmt\ClassConst::class => [
+            Deprecated::class,
             Type::class,
         ],
         Stmt\ClassMethod::class => [
+            Deprecated::class,
             Param::class,
             Returns::class,
             Template::class,
             Type::class,
         ],
         Stmt\Function_::class => [
+            Deprecated::class,
             Param::class,
             Returns::class,
             Template::class,
             Type::class,
         ],
         Stmt\Interface_::class => [
+            Deprecated::class,
             Method::class,
             Property::class,
             PropertyRead::class,
@@ -76,11 +82,13 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
             TemplateCovariant::class,
         ],
         Stmt\Property::class => [
+            Deprecated::class,
             IsReadOnly::class,
             Property::class,
             Type::class,
         ],
         Stmt\Trait_::class => [
+            Deprecated::class,
             Method::class,
             Property::class,
             PropertyRead::class,
@@ -92,6 +100,7 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
     ];
 
     private const SHORT_NAME_TO_FQN = [
+        'Deprecated' => Deprecated::class,
         'IsReadOnly' => IsReadOnly::class,
         'Method' => Method::class,
         'Param' => Param::class,
@@ -106,6 +115,9 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
     ];
 
     private const ANNOTATION_PER_ATTRIBUTE = [
+        Deprecated::class => [
+            'all' => 'deprecated',
+        ],
         IsReadOnly::class => [
             'all' => 'readonly',
         ],
@@ -146,6 +158,9 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
     ];
 
     private const ARGUMENTS_PER_ATTRIBUTE = [
+        Deprecated::class => [
+            'all' => self::ARGS_NONE,
+        ],
         IsReadOnly::class => [
             'all' => self::ARGS_NONE,
         ],
