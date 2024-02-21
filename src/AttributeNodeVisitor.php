@@ -12,6 +12,7 @@ use PhpParser\Node\Scalar\String_;
 use PhpParser\Node\Stmt;
 use PhpParser\NodeVisitorAbstract;
 use PhpStaticAnalysis\Attributes\Deprecated;
+use PhpStaticAnalysis\Attributes\Internal;
 use PhpStaticAnalysis\Attributes\IsReadOnly;
 use PhpStaticAnalysis\Attributes\Method;
 use PhpStaticAnalysis\Attributes\Param;
@@ -28,6 +29,7 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
 {
     private const ARGS_NONE = 'none';
     private const ARGS_ONE = 'one';
+    private const ARGS_ONE_OPTIONAL = 'one_optional';
     private const ARGS_TWO_WITH_TYPE = 'two with type';
     private const ARGS_MANY_WITH_NAME = "many with name";
     private const ARGS_MANY_WITHOUT_NAME = "many without name";
@@ -45,6 +47,7 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
     private const ALLOWED_ATTRIBUTES_PER_NODE_TYPE = [
         Stmt\Class_::class => [
             Deprecated::class,
+            Internal::class,
             Method::class,
             Property::class,
             PropertyRead::class,
@@ -55,10 +58,12 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
         ],
         Stmt\ClassConst::class => [
             Deprecated::class,
+            Internal::class,
             Type::class,
         ],
         Stmt\ClassMethod::class => [
             Deprecated::class,
+            Internal::class,
             Param::class,
             Returns::class,
             Template::class,
@@ -66,6 +71,7 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
         ],
         Stmt\Function_::class => [
             Deprecated::class,
+            Internal::class,
             Param::class,
             Returns::class,
             Template::class,
@@ -73,6 +79,7 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
         ],
         Stmt\Interface_::class => [
             Deprecated::class,
+            Internal::class,
             Method::class,
             Property::class,
             PropertyRead::class,
@@ -83,12 +90,14 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
         ],
         Stmt\Property::class => [
             Deprecated::class,
+            Internal::class,
             IsReadOnly::class,
             Property::class,
             Type::class,
         ],
         Stmt\Trait_::class => [
             Deprecated::class,
+            Internal::class,
             Method::class,
             Property::class,
             PropertyRead::class,
@@ -101,6 +110,7 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
 
     private const SHORT_NAME_TO_FQN = [
         'Deprecated' => Deprecated::class,
+        'Internal' => Internal::class,
         'IsReadOnly' => IsReadOnly::class,
         'Method' => Method::class,
         'Param' => Param::class,
@@ -117,6 +127,9 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
     private const ANNOTATION_PER_ATTRIBUTE = [
         Deprecated::class => [
             'all' => 'deprecated',
+        ],
+        Internal::class => [
+            'all' => 'internal',
         ],
         IsReadOnly::class => [
             'all' => 'readonly',
@@ -161,6 +174,9 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
         Deprecated::class => [
             'all' => self::ARGS_NONE,
         ],
+        Internal::class => [
+            'all' => self::ARGS_ONE_OPTIONAL,
+        ],
         IsReadOnly::class => [
             'all' => self::ARGS_NONE,
         ],
@@ -204,8 +220,9 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
     private int $endFilePos;
     private int $endTokenPos;
 
-    public function __construct()
-    {
+    public function __construct(
+        private string $toolType = ''
+    ) {
         $this->initPositions();
     }
 
@@ -250,6 +267,19 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
                                     $tagsToAdd[] = $this->createTag($nodeType, $attributeName, $args[0]);
                                     $tagCreated = true;
                                 }
+                                break;
+                            case self::ARGS_ONE_OPTIONAL:
+                                if (isset($args[0])) {
+                                    $tagsToAdd[] = $this->createTag(
+                                        $nodeType,
+                                        $attributeName,
+                                        $args[0],
+                                        prefix: $this->toolType === 'psalm' ? $this->toolType : null
+                                    );
+                                } else {
+                                    $tagsToAdd[] = $this->createTag($nodeType, $attributeName);
+                                }
+                                $tagCreated = true;
                                 break;
                             case self::ARGS_TWO_WITH_TYPE:
                                 if (isset($args[0])) {
@@ -318,7 +348,8 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
         Arg $argument = null,
         Arg $of = null,
         bool $useName = false,
-        string $nameToUse = null
+        string $nameToUse = null,
+        string $prefix = null
     ): string {
         if (array_key_exists($nodeType, self::ANNOTATION_PER_ATTRIBUTE[$attributeName])) {
             $tagName = self::ANNOTATION_PER_ATTRIBUTE[$attributeName][$nodeType];
@@ -326,6 +357,9 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
             $tagName = self::ANNOTATION_PER_ATTRIBUTE[$attributeName]['all'];
         } else {
             return '';
+        }
+        if ($prefix !== null) {
+            $tagName = $prefix . '-' . $tagName;
         }
         $tag = '@' . $tagName;
         if ($argument) {

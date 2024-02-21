@@ -2,7 +2,6 @@
 
 namespace test\PhpStaticAnalysis\NodeVisitor;
 
-use Exception;
 use PhpParser\Node;
 use PhpParser\Node\Attribute;
 use PhpParser\Node\AttributeGroup;
@@ -20,7 +19,7 @@ class DeprecatedAttributeNodeVisitorTest extends AttributeNodeVisitorTestBase
         $this->assertEquals("/**\n * @deprecated\n */", $docText);
     }
 
-    private function addDeprecatedAttributeToNode(Node\Stmt\Class_ $node, bool $addType = false): void
+    private function addDeprecatedAttributeToNode(Node\Stmt\Class_ $node): void
     {
         $attributeName = new FullyQualified(Deprecated::class);
         $attribute = new Attribute($attributeName);
