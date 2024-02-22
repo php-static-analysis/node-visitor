@@ -15,6 +15,7 @@ use PhpStaticAnalysis\Attributes\Deprecated;
 use PhpStaticAnalysis\Attributes\Internal;
 use PhpStaticAnalysis\Attributes\IsReadOnly;
 use PhpStaticAnalysis\Attributes\Method;
+use PhpStaticAnalysis\Attributes\Mixin;
 use PhpStaticAnalysis\Attributes\Param;
 use PhpStaticAnalysis\Attributes\Property;
 use PhpStaticAnalysis\Attributes\PropertyRead;
@@ -49,6 +50,7 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
             Deprecated::class,
             Internal::class,
             Method::class,
+            Mixin::class,
             Property::class,
             PropertyRead::class,
             PropertyWrite::class,
@@ -81,6 +83,7 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
             Deprecated::class,
             Internal::class,
             Method::class,
+            Mixin::class,
             Property::class,
             PropertyRead::class,
             PropertyWrite::class,
@@ -99,6 +102,7 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
             Deprecated::class,
             Internal::class,
             Method::class,
+            Mixin::class,
             Property::class,
             PropertyRead::class,
             PropertyWrite::class,
@@ -113,6 +117,7 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
         'Internal' => Internal::class,
         'IsReadOnly' => IsReadOnly::class,
         'Method' => Method::class,
+        'Mixin' => Mixin::class,
         'Param' => Param::class,
         'Property' => Property::class,
         'PropertyRead' => PropertyRead::class,
@@ -136,6 +141,9 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
         ],
         Method::class => [
             'all' => 'method',
+        ],
+        Mixin::class => [
+            'all' => 'mixin',
         ],
         Param::class => [
             'all' => 'param',
@@ -181,6 +189,9 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
             'all' => self::ARGS_NONE,
         ],
         Method::class => [
+            'all' => self::ARGS_MANY_WITHOUT_NAME,
+        ],
+        Mixin::class => [
             'all' => self::ARGS_MANY_WITHOUT_NAME,
         ],
         Param::class => [

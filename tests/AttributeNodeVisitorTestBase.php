@@ -7,7 +7,6 @@ use PhpParser\Node;
 use PhpParser\Node\Attribute;
 use PhpParser\Node\AttributeGroup;
 use PhpParser\Node\Name\FullyQualified;
-use PhpStaticAnalysis\Attributes\Internal;
 use PhpStaticAnalysis\Attributes\IsReadOnly;
 use PhpStaticAnalysis\NodeVisitor\AttributeNodeVisitor;
 use PHPUnit\Framework\TestCase;

@@ -2,20 +2,7 @@
 
 namespace test\PhpStaticAnalysis\NodeVisitor;
 
-use Exception;
 use PhpParser\Node;
-use PhpParser\Node\Attribute;
-use PhpParser\Node\AttributeGroup;
-use PhpParser\Node\Identifier;
-use PhpParser\Node\Name\FullyQualified;
-use PhpStaticAnalysis\Attributes\IsReadOnly;
-use PhpStaticAnalysis\Attributes\Param;
-use PhpStaticAnalysis\Attributes\Property;
-use PhpStaticAnalysis\Attributes\PropertyRead;
-use PhpStaticAnalysis\Attributes\PropertyWrite;
-use PhpStaticAnalysis\Attributes\Returns;
-use PhpStaticAnalysis\Attributes\Template;
-use PhpStaticAnalysis\Attributes\Type;
 
 class IsReadOnlyAttributeNodeVisitorTest extends AttributeNodeVisitorTestBase
 {

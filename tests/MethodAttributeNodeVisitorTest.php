@@ -5,7 +5,6 @@ namespace test\PhpStaticAnalysis\NodeVisitor;
 use PhpParser\Node;
 use PhpParser\Node\Attribute;
 use PhpParser\Node\AttributeGroup;
-use PhpParser\Node\Identifier;
 use PhpParser\Node\Name\FullyQualified;
 use PhpStaticAnalysis\Attributes\Method;
 
