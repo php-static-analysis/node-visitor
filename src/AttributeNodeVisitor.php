@@ -24,6 +24,9 @@ use PhpStaticAnalysis\Attributes\Returns;
 use PhpStaticAnalysis\Attributes\Template;
 use PhpStaticAnalysis\Attributes\TemplateContravariant;
 use PhpStaticAnalysis\Attributes\TemplateCovariant;
+use PhpStaticAnalysis\Attributes\TemplateExtends;
+use PhpStaticAnalysis\Attributes\TemplateImplements;
+use PhpStaticAnalysis\Attributes\TemplateUse;
 use PhpStaticAnalysis\Attributes\Type;
 
 class AttributeNodeVisitor extends NodeVisitorAbstract
@@ -32,6 +35,7 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
     private const ARGS_ONE = 'one';
     private const ARGS_ONE_OPTIONAL = 'one_optional';
     private const ARGS_TWO_WITH_TYPE = 'two with type';
+    private const ARGS_MANY_IN_USE = "many in use";
     private const ARGS_MANY_WITH_NAME = "many with name";
     private const ARGS_MANY_WITHOUT_NAME = "many without name";
 
@@ -57,6 +61,9 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
             Template::class,
             TemplateContravariant::class,
             TemplateCovariant::class,
+            TemplateExtends::class,
+            TemplateImplements::class,
+            TemplateUse::class,
         ],
         Stmt\ClassConst::class => [
             Deprecated::class,
@@ -126,6 +133,9 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
         'Template' => Template::class,
         'TemplateContravariant' => TemplateContravariant::class,
         'TemplateCovariant' => TemplateCovariant::class,
+        'TemplateExtends' => TemplateExtends::class,
+        'TemplateImplements' => TemplateImplements::class,
+        'TemplateUse' => TemplateUse::class,
         'Type' => Type::class,
     ];
 
@@ -169,6 +179,15 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
         ],
         TemplateCovariant::class => [
             'all' => 'template-covariant',
+        ],
+        TemplateExtends::class => [
+            'all' => 'template-extends',
+        ],
+        TemplateImplements::class => [
+            'all' => 'template-implements',
+        ],
+        TemplateUse::class => [
+            'all' => 'template-use',
         ],
         Type::class => [
             Stmt\ClassConst::class => 'var',
@@ -219,6 +238,15 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
         TemplateCovariant::class => [
             'all' => self::ARGS_TWO_WITH_TYPE,
         ],
+        TemplateExtends::class => [
+            'all' => self::ARGS_ONE,
+        ],
+        TemplateImplements::class => [
+            'all' => self::ARGS_MANY_WITHOUT_NAME,
+        ],
+        TemplateUse::class => [
+            'all' => self::ARGS_MANY_IN_USE,
+        ],
         Type::class => [
             'all' => self::ARGS_ONE
         ],
@@ -242,6 +270,7 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
         if (in_array($node::class, self::ALLOWED_NODE_TYPES)) {
             /** @var Stmt\Class_|Stmt\ClassConst|Stmt\ClassMethod|Stmt\Function_|Stmt\Interface_|Stmt\Property|Stmt\Trait_ $node */
             $tagsToAdd = [];
+            $useTagsToAdd = [];
             $attributeGroups = $node->attrGroups;
             $nodeType = $node::class;
 
@@ -306,8 +335,16 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
                                 break;
                             case self::ARGS_MANY_WITHOUT_NAME:
                                 foreach ($args as $arg) {
-                                    $tagsToAdd[] = $this->createTag($nodeType, $attributeName, $arg, useName: false);
+                                    $tagsToAdd[] = $this->createTag($nodeType, $attributeName, $arg);
                                     $tagCreated = true;
+                                }
+                                break;
+                            case self::ARGS_MANY_IN_USE:
+                                foreach ($args as $arg) {
+                                    if ($arg->value instanceof String_) {
+                                        $useValue = $arg->value->value;
+                                        $useTagsToAdd[$useValue] = $this->createTag($nodeType, $attributeName, $arg);
+                                    }
                                 }
                                 break;
                         }
@@ -318,36 +355,13 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
                 }
             }
             if ($node instanceof Stmt\ClassMethod || $node instanceof Stmt\Function_) {
-                foreach ($node->getParams() as $param) {
-                    $attributeGroups = $param->attrGroups;
-                    foreach ($attributeGroups as $attributeGroup) {
-                        $attributes = $attributeGroup->attrs;
-                        foreach ($attributes as $attribute) {
-                            $attributeName = $attribute->name->toString();
-                            $attributeName = self::SHORT_NAME_TO_FQN[$attributeName] ?? $attributeName;
-                            if ($attributeName === Param::class) {
-                                $args = $attribute->args;
-                                $tagCreated = false;
-                                if (isset($args[0])) {
-                                    $var = $param->var;
-                                    if ($var instanceof Node\Expr\Variable) {
-                                        $name = $var->name;
-                                        if (is_string($name)) {
-                                            $tagsToAdd[] = $this->createTag($nodeType, $attributeName, $args[0], useName: true, nameToUse: $name);
-                                            $tagCreated = true;
-                                        }
-                                    }
-                                }
-                                if ($tagCreated) {
-                                    $this->updatePositions($attribute);
-                                }
-                            }
-                        }
-                    }
-                }
+                $tagsToAdd = array_merge($tagsToAdd, $this->getParamTagsFromParams($node));
             }
             if ($tagsToAdd !== []) {
                 $this->addDocTagsToNode($tagsToAdd, $node);
+            }
+            if ($useTagsToAdd !== [] && $node instanceof Stmt\Class_) {
+                $this->addUseDocTagsToNodeTraitUses($useTagsToAdd, $node);
             }
         }
         return $node;
@@ -404,6 +418,41 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
         return $tag;
     }
 
+    #[Returns('string[]')]
+    private function getParamTagsFromParams(Stmt\ClassMethod|Stmt\Function_ $node): array
+    {
+        $nodeType = $node::class;
+        $tagsToAdd = [];
+        foreach ($node->getParams() as $param) {
+            $attributeGroups = $param->attrGroups;
+            foreach ($attributeGroups as $attributeGroup) {
+                $attributes = $attributeGroup->attrs;
+                foreach ($attributes as $attribute) {
+                    $attributeName = $attribute->name->toString();
+                    $attributeName = self::SHORT_NAME_TO_FQN[$attributeName] ?? $attributeName;
+                    if ($attributeName === Param::class) {
+                        $args = $attribute->args;
+                        $tagCreated = false;
+                        if (isset($args[0])) {
+                            $var = $param->var;
+                            if ($var instanceof Node\Expr\Variable) {
+                                $name = $var->name;
+                                if (is_string($name)) {
+                                    $tagsToAdd[] = $this->createTag($nodeType, $attributeName, $args[0], useName: true, nameToUse: $name);
+                                    $tagCreated = true;
+                                }
+                            }
+                        }
+                        if ($tagCreated) {
+                            $this->updatePositions($attribute);
+                        }
+                    }
+                }
+            }
+        }
+        return $tagsToAdd;
+    }
+
     #[Param(tagsToAdd: 'string[]')]
     private function addDocTagsToNode(array $tagsToAdd, Node $node): void
     {
@@ -433,6 +482,36 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
             $this->endTokenPos
         );
         $node->setDocComment($docComment);
+    }
+
+    #[Param(useTagsToAdd: 'string[]')]
+    private function addUseDocTagsToNodeTraitUses(array $useTagsToAdd, Stmt\Class_ $node): void
+    {
+        $this->initPositions();
+        foreach ($node->stmts as $stmt) {
+            if ($stmt instanceof Stmt\TraitUse) {
+                foreach ($stmt->traits as $trait) {
+                    foreach ($useTagsToAdd as $tagValue => $useTag) {
+                        $tagParts = explode('<', (string)$tagValue);
+                        $tagName = $tagParts[0];
+                        $parts = array_reverse(explode('\\', $tagName));
+                        $traitParts = array_reverse($trait->getParts());
+                        $useMatches = true;
+                        foreach ($parts as $i => $part) {
+                            if (!isset($traitParts[$i]) || $traitParts[$i] !== $part) {
+                                $useMatches = false;
+                                break;
+                            }
+                        }
+                        if ($useMatches) {
+                            $this->addDocTagsToNode([$useTag], $stmt);
+                            unset($useTagsToAdd[$tagName]);
+                            break;
+                        }
+                    }
+                }
+            }
+        }
     }
     
     private function updatePositions(Node|Comment $node): void
