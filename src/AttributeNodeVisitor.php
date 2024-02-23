@@ -22,6 +22,7 @@ use PhpStaticAnalysis\Attributes\Property;
 use PhpStaticAnalysis\Attributes\PropertyRead;
 use PhpStaticAnalysis\Attributes\PropertyWrite;
 use PhpStaticAnalysis\Attributes\Returns;
+use PhpStaticAnalysis\Attributes\SelfOut;
 use PhpStaticAnalysis\Attributes\Template;
 use PhpStaticAnalysis\Attributes\TemplateContravariant;
 use PhpStaticAnalysis\Attributes\TemplateCovariant;
@@ -34,7 +35,8 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
 {
     private const ARGS_NONE = 'none';
     private const ARGS_ONE = 'one';
-    private const ARGS_ONE_OPTIONAL = 'one_optional';
+    private const ARGS_ONE_OPTIONAL = 'one optional';
+    private const ARGS_ONE_WITH_PREFIX = 'one with prefix';
     private const ARGS_TWO_WITH_TYPE = 'two with type';
     private const ARGS_MANY_IN_USE = "many in use";
     private const ARGS_MANY_WITH_NAME = "many with name";
@@ -77,6 +79,7 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
             Param::class,
             ParamOut::class,
             Returns::class,
+            SelfOut::class,
             Template::class,
             Type::class,
         ],
@@ -134,6 +137,7 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
         'PropertyRead' => PropertyRead::class,
         'PropertyWrite' => PropertyWrite::class,
         'Returns' => Returns::class,
+        'SelfOut' => SelfOut::class,
         'Template' => Template::class,
         'TemplateContravariant' => TemplateContravariant::class,
         'TemplateCovariant' => TemplateCovariant::class,
@@ -177,6 +181,9 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
         ],
         Returns::class => [
             'all' => 'return',
+        ],
+        SelfOut::class => [
+            'all' => 'self-out',
         ],
         Template::class => [
             'all' => 'template',
@@ -238,6 +245,9 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
         ],
         Returns::class => [
             'all' => self::ARGS_ONE,
+        ],
+        SelfOut::class => [
+            'all' => self::ARGS_ONE_WITH_PREFIX,
         ],
         Template::class => [
             'all' => self::ARGS_TWO_WITH_TYPE,
@@ -318,6 +328,12 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
                                     $tagCreated = true;
                                 }
                                 break;
+                            case self::ARGS_ONE_WITH_PREFIX:
+                                if (isset($args[0])) {
+                                    $tagsToAdd[] = $this->createTag($nodeType, $attributeName, $args[0], prefix: $this->toolType);
+                                    $tagCreated = true;
+                                }
+                                break;
                             case self::ARGS_ONE_OPTIONAL:
                                 if (isset($args[0])) {
                                     $tagsToAdd[] = $this->createTag(
@@ -393,7 +409,7 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
         } else {
             return '';
         }
-        if ($prefix !== null) {
+        if ($prefix !== null && $prefix !== '') {
             $tagName = $prefix . '-' . $tagName;
         }
         $tag = '@' . $tagName;
