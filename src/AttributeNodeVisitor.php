@@ -17,6 +17,7 @@ use PhpStaticAnalysis\Attributes\IsReadOnly;
 use PhpStaticAnalysis\Attributes\Method;
 use PhpStaticAnalysis\Attributes\Mixin;
 use PhpStaticAnalysis\Attributes\Param;
+use PhpStaticAnalysis\Attributes\ParamOut;
 use PhpStaticAnalysis\Attributes\Property;
 use PhpStaticAnalysis\Attributes\PropertyRead;
 use PhpStaticAnalysis\Attributes\PropertyWrite;
@@ -74,6 +75,7 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
             Deprecated::class,
             Internal::class,
             Param::class,
+            ParamOut::class,
             Returns::class,
             Template::class,
             Type::class,
@@ -82,6 +84,7 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
             Deprecated::class,
             Internal::class,
             Param::class,
+            ParamOut::class,
             Returns::class,
             Template::class,
             Type::class,
@@ -126,6 +129,7 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
         'Method' => Method::class,
         'Mixin' => Mixin::class,
         'Param' => Param::class,
+        'ParamOut' => ParamOut::class,
         'Property' => Property::class,
         'PropertyRead' => PropertyRead::class,
         'PropertyWrite' => PropertyWrite::class,
@@ -157,6 +161,9 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
         ],
         Param::class => [
             'all' => 'param',
+        ],
+        ParamOut::class => [
+            'all' => 'param-out',
         ],
         Property::class => [
             Stmt\Class_::class => 'property',
@@ -214,6 +221,9 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
             'all' => self::ARGS_MANY_WITHOUT_NAME,
         ],
         Param::class => [
+            'all' => self::ARGS_MANY_WITH_NAME,
+        ],
+        ParamOut::class => [
             'all' => self::ARGS_MANY_WITH_NAME,
         ],
         Property::class => [
@@ -430,7 +440,7 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
                 foreach ($attributes as $attribute) {
                     $attributeName = $attribute->name->toString();
                     $attributeName = self::SHORT_NAME_TO_FQN[$attributeName] ?? $attributeName;
-                    if ($attributeName === Param::class) {
+                    if ($attributeName === Param::class || $attributeName === ParamOut::class) {
                         $args = $attribute->args;
                         $tagCreated = false;
                         if (isset($args[0])) {
