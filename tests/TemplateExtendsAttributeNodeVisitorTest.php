@@ -2,7 +2,6 @@
 
 namespace test\PhpStaticAnalysis\NodeVisitor;
 
-use Exception;
 use PhpParser\Node;
 use PhpParser\Node\Attribute;
 use PhpParser\Node\AttributeGroup;

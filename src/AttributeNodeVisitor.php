@@ -21,6 +21,8 @@ use PhpStaticAnalysis\Attributes\ParamOut;
 use PhpStaticAnalysis\Attributes\Property;
 use PhpStaticAnalysis\Attributes\PropertyRead;
 use PhpStaticAnalysis\Attributes\PropertyWrite;
+use PhpStaticAnalysis\Attributes\RequireExtends;
+use PhpStaticAnalysis\Attributes\RequireImplements;
 use PhpStaticAnalysis\Attributes\Returns;
 use PhpStaticAnalysis\Attributes\SelfOut;
 use PhpStaticAnalysis\Attributes\Template;
@@ -41,6 +43,7 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
     private const ARGS_MANY_IN_USE = "many in use";
     private const ARGS_MANY_WITH_NAME = "many with name";
     private const ARGS_MANY_WITHOUT_NAME = "many without name";
+    private const ARGS_MANY_WITHOUT_NAME_AND_PREFIX = "many without name and prexif";
 
     private const ALLOWED_NODE_TYPES = [
         Stmt\Class_::class,
@@ -119,6 +122,8 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
             Property::class,
             PropertyRead::class,
             PropertyWrite::class,
+            RequireExtends::class,
+            RequireImplements::class,
             Template::class,
             TemplateContravariant::class,
             TemplateCovariant::class,
@@ -136,6 +141,8 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
         'Property' => Property::class,
         'PropertyRead' => PropertyRead::class,
         'PropertyWrite' => PropertyWrite::class,
+        'RequireExtends' => RequireExtends::class,
+        'RequireImplements' => RequireImplements::class,
         'Returns' => Returns::class,
         'SelfOut' => SelfOut::class,
         'Template' => Template::class,
@@ -178,6 +185,12 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
         ],
         PropertyWrite::class => [
             'all' => 'property-write',
+        ],
+        RequireExtends::class => [
+            'all' => 'require-extends',
+        ],
+        RequireImplements::class => [
+            'all' => 'require-implements',
         ],
         Returns::class => [
             'all' => 'return',
@@ -242,6 +255,12 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
         ],
         PropertyWrite::class => [
             'all' => self::ARGS_MANY_WITH_NAME,
+        ],
+        RequireExtends::class => [
+            'all' => self::ARGS_ONE_WITH_PREFIX,
+        ],
+        RequireImplements::class => [
+            'all' => self::ARGS_MANY_WITHOUT_NAME_AND_PREFIX,
         ],
         Returns::class => [
             'all' => self::ARGS_ONE,
@@ -362,6 +381,12 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
                             case self::ARGS_MANY_WITHOUT_NAME:
                                 foreach ($args as $arg) {
                                     $tagsToAdd[] = $this->createTag($nodeType, $attributeName, $arg);
+                                    $tagCreated = true;
+                                }
+                                break;
+                            case self::ARGS_MANY_WITHOUT_NAME_AND_PREFIX:
+                                foreach ($args as $arg) {
+                                    $tagsToAdd[] = $this->createTag($nodeType, $attributeName, $arg, prefix: $this->toolType);
                                     $tagCreated = true;
                                 }
                                 break;
