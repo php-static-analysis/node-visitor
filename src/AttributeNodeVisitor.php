@@ -12,6 +12,7 @@ use PhpParser\Node\Scalar\String_;
 use PhpParser\Node\Stmt;
 use PhpParser\NodeVisitorAbstract;
 use PhpStaticAnalysis\Attributes\Deprecated;
+use PhpStaticAnalysis\Attributes\Impure;
 use PhpStaticAnalysis\Attributes\Internal;
 use PhpStaticAnalysis\Attributes\IsReadOnly;
 use PhpStaticAnalysis\Attributes\Method;
@@ -21,6 +22,7 @@ use PhpStaticAnalysis\Attributes\ParamOut;
 use PhpStaticAnalysis\Attributes\Property;
 use PhpStaticAnalysis\Attributes\PropertyRead;
 use PhpStaticAnalysis\Attributes\PropertyWrite;
+use PhpStaticAnalysis\Attributes\Pure;
 use PhpStaticAnalysis\Attributes\RequireExtends;
 use PhpStaticAnalysis\Attributes\RequireImplements;
 use PhpStaticAnalysis\Attributes\Returns;
@@ -36,6 +38,7 @@ use PhpStaticAnalysis\Attributes\Type;
 class AttributeNodeVisitor extends NodeVisitorAbstract
 {
     private const ARGS_NONE = 'none';
+    private const ARGS_NONE_WITH_PREFIX = 'none with prefix';
     private const ARGS_ONE = 'one';
     private const ARGS_ONE_OPTIONAL = 'one optional';
     private const ARGS_ONE_WITH_PREFIX = 'one with prefix';
@@ -78,9 +81,11 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
         ],
         Stmt\ClassMethod::class => [
             Deprecated::class,
+            Impure::class,
             Internal::class,
             Param::class,
             ParamOut::class,
+            Pure::class,
             Returns::class,
             SelfOut::class,
             Template::class,
@@ -88,9 +93,11 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
         ],
         Stmt\Function_::class => [
             Deprecated::class,
+            Impure::class,
             Internal::class,
             Param::class,
             ParamOut::class,
+            Pure::class,
             Returns::class,
             Template::class,
             Type::class,
@@ -132,6 +139,7 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
 
     private const SHORT_NAME_TO_FQN = [
         'Deprecated' => Deprecated::class,
+        'Impure' => Impure::class,
         'Internal' => Internal::class,
         'IsReadOnly' => IsReadOnly::class,
         'Method' => Method::class,
@@ -141,6 +149,7 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
         'Property' => Property::class,
         'PropertyRead' => PropertyRead::class,
         'PropertyWrite' => PropertyWrite::class,
+        'Pure' => Pure::class,
         'RequireExtends' => RequireExtends::class,
         'RequireImplements' => RequireImplements::class,
         'Returns' => Returns::class,
@@ -157,6 +166,9 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
     private const ANNOTATION_PER_ATTRIBUTE = [
         Deprecated::class => [
             'all' => 'deprecated',
+        ],
+        Impure::class => [
+            'all' => 'impure',
         ],
         Internal::class => [
             'all' => 'internal',
@@ -185,6 +197,9 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
         ],
         PropertyWrite::class => [
             'all' => 'property-write',
+        ],
+        Pure::class => [
+            'all' => 'pure',
         ],
         RequireExtends::class => [
             'all' => 'require-extends',
@@ -228,6 +243,9 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
         Deprecated::class => [
             'all' => self::ARGS_NONE,
         ],
+        Impure::class => [
+            'all' => self::ARGS_NONE_WITH_PREFIX,
+        ],
         Internal::class => [
             'all' => self::ARGS_ONE_OPTIONAL,
         ],
@@ -255,6 +273,9 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
         ],
         PropertyWrite::class => [
             'all' => self::ARGS_MANY_WITH_NAME,
+        ],
+        Pure::class => [
+            'all' => self::ARGS_NONE_WITH_PREFIX,
         ],
         RequireExtends::class => [
             'all' => self::ARGS_ONE_WITH_PREFIX,
@@ -339,6 +360,10 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
                         switch ($argumentType) {
                             case self::ARGS_NONE:
                                 $tagsToAdd[] = $this->createTag($nodeType, $attributeName);
+                                $tagCreated = true;
+                                break;
+                            case self::ARGS_NONE_WITH_PREFIX:
+                                $tagsToAdd[] = $this->createTag($nodeType, $attributeName, prefix: $this->toolType);
                                 $tagCreated = true;
                                 break;
                             case self::ARGS_ONE:
