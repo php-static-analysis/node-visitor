@@ -2,6 +2,7 @@
 
 namespace test\PhpStaticAnalysis\NodeVisitor;
 
+use other\A;
 use PhpParser\Node;
 use PhpParser\Node\Attribute;
 use PhpParser\Node\AttributeGroup;
@@ -16,7 +17,7 @@ class MixinAttributeNodeVisitorTest extends AttributeNodeVisitorTestBase
         $this->addMixinAttributesToNode($node);
         $this->nodeVisitor->enterNode($node);
         $docText = $this->getDocText($node);
-        $this->assertEquals("/**\n * @mixin A\n */", $docText);
+        $this->assertEquals("/**\n * @mixin other\A\n */", $docText);
     }
 
     public function testAddsSeveralMixinPHPDocs(): void
@@ -25,7 +26,7 @@ class MixinAttributeNodeVisitorTest extends AttributeNodeVisitorTestBase
         $this->addMixinAttributesToNode($node, 2);
         $this->nodeVisitor->enterNode($node);
         $docText = $this->getDocText($node);
-        $this->assertEquals("/**\n * @mixin A\n * @mixin A\n */", $docText);
+        $this->assertEquals("/**\n * @mixin other\A\n * @mixin other\A\n */", $docText);
     }
 
     public function testAddsMultipleMixinPHPDocs(): void
@@ -35,12 +36,13 @@ class MixinAttributeNodeVisitorTest extends AttributeNodeVisitorTestBase
         $this->addMixinAttributesToNode($node);
         $this->nodeVisitor->enterNode($node);
         $docText = $this->getDocText($node);
-        $this->assertEquals("/**\n * @mixin A\n * @mixin A\n */", $docText);
+        $this->assertEquals("/**\n * @mixin other\A\n * @mixin other\A\n */", $docText);
     }
 
     private function addMixinAttributesToNode(Node\Stmt\Class_ $node, int $num = 1): void
     {
-        $value = new Node\Scalar\String_('A');
+        $class = new Node\Name(A::class);
+        $value = new Node\Expr\ClassConstFetch($class, 'class');
         $args = [];
         for ($i = 0; $i < $num; $i++) {
             $args[] = new Node\Arg($value);
@@ -49,4 +51,10 @@ class MixinAttributeNodeVisitorTest extends AttributeNodeVisitorTestBase
         $attribute = new Attribute($attributeName, $args);
         $node->attrGroups = array_merge($node->attrGroups, [new AttributeGroup([$attribute])]);
     }
+}
+
+namespace other;
+
+class A
+{
 }

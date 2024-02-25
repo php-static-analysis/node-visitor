@@ -2,6 +2,7 @@
 
 namespace test\PhpStaticAnalysis\NodeVisitor;
 
+use other\RequireClass;
 use PhpParser\Node;
 use PhpParser\Node\Attribute;
 use PhpParser\Node\AttributeGroup;
@@ -16,16 +17,23 @@ class RequireExtendsAttributeNodeVisitorTest extends AttributeNodeVisitorTestBas
         $this->addRequireExtendsAttributeToNode($node);
         $this->nodeVisitor->enterNode($node);
         $docText = $this->getDocText($node);
-        $this->assertEquals("/**\n * @require-extends RequireClass\n */", $docText);
+        $this->assertEquals("/**\n * @require-extends other\RequireClass\n */", $docText);
     }
 
     private function addRequireExtendsAttributeToNode(Node\Stmt\Trait_ $node): void
     {
+        $class = new Node\Name(RequireClass::class);
         $args = [
-            new Node\Arg(new Node\Scalar\String_('RequireClass'))
+            new Node\Arg(new Node\Expr\ClassConstFetch($class, 'class'))
         ];
         $attributeName = new FullyQualified(RequireExtends::class);
         $attribute = new Attribute($attributeName, $args);
         $node->attrGroups = array_merge($node->attrGroups, [new AttributeGroup([$attribute])]);
     }
+}
+
+namespace other;
+
+class RequireClass
+{
 }

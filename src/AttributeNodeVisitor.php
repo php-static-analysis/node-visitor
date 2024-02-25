@@ -33,10 +33,14 @@ use PhpStaticAnalysis\Attributes\TemplateCovariant;
 use PhpStaticAnalysis\Attributes\TemplateExtends;
 use PhpStaticAnalysis\Attributes\TemplateImplements;
 use PhpStaticAnalysis\Attributes\TemplateUse;
+use PhpStaticAnalysis\Attributes\Throws;
 use PhpStaticAnalysis\Attributes\Type;
 
 class AttributeNodeVisitor extends NodeVisitorAbstract
 {
+    public const TOOL_PHPSTAN = 'phpstan';
+    public const TOOL_PSALM = 'psalm';
+
     private const ARGS_NONE = 'none';
     private const ARGS_NONE_WITH_PREFIX = 'none with prefix';
     private const ARGS_ONE = 'one';
@@ -89,6 +93,7 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
             Returns::class,
             SelfOut::class,
             Template::class,
+            Throws::class,
             Type::class,
         ],
         Stmt\Function_::class => [
@@ -100,6 +105,7 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
             Pure::class,
             Returns::class,
             Template::class,
+            Throws::class,
             Type::class,
         ],
         Stmt\Interface_::class => [
@@ -160,6 +166,7 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
         'TemplateExtends' => TemplateExtends::class,
         'TemplateImplements' => TemplateImplements::class,
         'TemplateUse' => TemplateUse::class,
+        'Throws' => Throws::class,
         'Type' => Type::class,
     ];
 
@@ -230,6 +237,9 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
         ],
         TemplateUse::class => [
             'all' => 'template-use',
+        ],
+        Throws::class => [
+            'all' => 'throws',
         ],
         Type::class => [
             Stmt\ClassConst::class => 'var',
@@ -306,6 +316,9 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
         ],
         TemplateUse::class => [
             'all' => self::ARGS_MANY_IN_USE,
+        ],
+        Throws::class => [
+            'all' => self::ARGS_MANY_WITHOUT_NAME,
         ],
         Type::class => [
             'all' => self::ARGS_ONE
@@ -384,7 +397,7 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
                                         $nodeType,
                                         $attributeName,
                                         $args[0],
-                                        prefix: $this->toolType === 'psalm' ? $this->toolType : null
+                                        prefix: $this->toolType === self::TOOL_PSALM ? $this->toolType : null
                                     );
                                 } else {
                                     $tagsToAdd[] = $this->createTag($nodeType, $attributeName);
@@ -468,6 +481,17 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
             $type = '';
             if ($value instanceof String_) {
                 $type = $value->value;
+            } elseif ($value instanceof Node\Expr\ClassConstFetch &&
+                $value->class instanceof Node\Name &&
+                $value->name instanceof Node\Identifier &&
+                (string)$value->name == 'class'
+            ) {
+                $type = (string)$value->class;
+                if ($this->toolType === self::TOOL_PHPSTAN) {
+                    $type = '\\' . $type;
+                }
+            }
+            if ($type !== '') {
                 $tag .= ' ' . $type;
             }
             if ($of) {

@@ -2,6 +2,7 @@
 
 namespace test\PhpStaticAnalysis\NodeVisitor;
 
+use other\RequireInterface;
 use PhpParser\Node;
 use PhpParser\Node\Attribute;
 use PhpParser\Node\AttributeGroup;
@@ -16,7 +17,7 @@ class RequireImplementsAttributeNodeVisitorTest extends AttributeNodeVisitorTest
         $this->addRequireImplementsAttributesToNode($node);
         $this->nodeVisitor->enterNode($node);
         $docText = $this->getDocText($node);
-        $this->assertEquals("/**\n * @require-implements RequireInterface\n */", $docText);
+        $this->assertEquals("/**\n * @require-implements other\RequireInterface\n */", $docText);
     }
 
     public function testAddsSeveralRequireImplementsPHPDocs(): void
@@ -25,7 +26,7 @@ class RequireImplementsAttributeNodeVisitorTest extends AttributeNodeVisitorTest
         $this->addRequireImplementsAttributesToNode($node, 2);
         $this->nodeVisitor->enterNode($node);
         $docText = $this->getDocText($node);
-        $this->assertEquals("/**\n * @require-implements RequireInterface\n * @require-implements RequireInterface\n */", $docText);
+        $this->assertEquals("/**\n * @require-implements other\RequireInterface\n * @require-implements other\RequireInterface\n */", $docText);
     }
 
     public function testAddsMultipleRequireImplementsPHPDocs(): void
@@ -35,12 +36,13 @@ class RequireImplementsAttributeNodeVisitorTest extends AttributeNodeVisitorTest
         $this->addRequireImplementsAttributesToNode($node);
         $this->nodeVisitor->enterNode($node);
         $docText = $this->getDocText($node);
-        $this->assertEquals("/**\n * @require-implements RequireInterface\n * @require-implements RequireInterface\n */", $docText);
+        $this->assertEquals("/**\n * @require-implements other\RequireInterface\n * @require-implements other\RequireInterface\n */", $docText);
     }
 
     private function addRequireImplementsAttributesToNode(Node\Stmt\Trait_ $node, int $num = 1): void
     {
-        $value = new Node\Scalar\String_('RequireInterface');
+        $interface = new Node\Name(RequireInterface::class);
+        $value = new Node\Expr\ClassConstFetch($interface, 'class');
         $args = [];
         for ($i = 0; $i < $num; $i++) {
             $args[] = new Node\Arg($value);
@@ -49,4 +51,10 @@ class RequireImplementsAttributeNodeVisitorTest extends AttributeNodeVisitorTest
         $attribute = new Attribute($attributeName, $args);
         $node->attrGroups = array_merge($node->attrGroups, [new AttributeGroup([$attribute])]);
     }
+}
+
+namespace other;
+
+interface RequireInterface
+{
 }
