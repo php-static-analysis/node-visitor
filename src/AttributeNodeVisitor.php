@@ -12,6 +12,7 @@ use PhpParser\Node\Scalar\String_;
 use PhpParser\Node\Stmt;
 use PhpParser\NodeVisitorAbstract;
 use PhpStaticAnalysis\Attributes\Deprecated;
+use PhpStaticAnalysis\Attributes\Immutable;
 use PhpStaticAnalysis\Attributes\Impure;
 use PhpStaticAnalysis\Attributes\Internal;
 use PhpStaticAnalysis\Attributes\IsReadOnly;
@@ -65,6 +66,7 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
     private const ALLOWED_ATTRIBUTES_PER_NODE_TYPE = [
         Stmt\Class_::class => [
             Deprecated::class,
+            Immutable::class,
             Internal::class,
             Method::class,
             Mixin::class,
@@ -110,6 +112,7 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
         ],
         Stmt\Interface_::class => [
             Deprecated::class,
+            Immutable::class,
             Internal::class,
             Method::class,
             Mixin::class,
@@ -129,6 +132,7 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
         ],
         Stmt\Trait_::class => [
             Deprecated::class,
+            Immutable::class,
             Internal::class,
             Method::class,
             Mixin::class,
@@ -145,6 +149,7 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
 
     private const SHORT_NAME_TO_FQN = [
         'Deprecated' => Deprecated::class,
+        'Immutable' => Immutable::class,
         'Impure' => Impure::class,
         'Internal' => Internal::class,
         'IsReadOnly' => IsReadOnly::class,
@@ -173,6 +178,9 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
     private const ANNOTATION_PER_ATTRIBUTE = [
         Deprecated::class => [
             'all' => 'deprecated',
+        ],
+        Immutable::class => [
+            'all' => 'immutable',
         ],
         Impure::class => [
             'all' => 'impure',
@@ -252,6 +260,9 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
     private const ARGUMENTS_PER_ATTRIBUTE = [
         Deprecated::class => [
             'all' => self::ARGS_NONE,
+        ],
+        Immutable::class => [
+            'all' => self::ARGS_NONE_WITH_PREFIX,
         ],
         Impure::class => [
             'all' => self::ARGS_NONE_WITH_PREFIX,
