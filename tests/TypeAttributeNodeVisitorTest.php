@@ -19,6 +19,15 @@ class TypeAttributeNodeVisitorTest extends AttributeNodeVisitorTestBase
         $this->assertEquals("/**\n * @var string\n */", $docText);
     }
 
+    public function testAddsTypePHPDoc(): void
+    {
+        $node = new Node\Stmt\Class_('Test');
+        $this->addTypeAttributeToNode($node);
+        $this->nodeVisitor->enterNode($node);
+        $docText = $this->getDocText($node);
+        $this->assertEquals("/**\n * @type StringArray string[]\n */", $docText);
+    }
+
     public function testAddsReturnPHPDocWithTypeAttribute(): void
     {
         $node = new Node\Stmt\ClassMethod('Test');
@@ -28,9 +37,11 @@ class TypeAttributeNodeVisitorTest extends AttributeNodeVisitorTestBase
         $this->assertEquals("/**\n * @return string\n */", $docText);
     }
 
-    private function addTypeAttributeToNode(Node\Stmt\Property|Node\Stmt\ClassMethod $node): void
+    private function addTypeAttributeToNode(Node\Stmt\Property|Node\Stmt\ClassMethod|Node\Stmt\Class_ $node): void
     {
         $args = [
+            $node instanceof Node\Stmt\Class_ ?
+            new Node\Arg(new Node\Scalar\String_('StringArray string[]')) :
             new Node\Arg(new Node\Scalar\String_('string'))
         ];
         $attributeName = new FullyQualified(Type::class);

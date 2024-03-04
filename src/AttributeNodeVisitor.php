@@ -11,8 +11,10 @@ use PhpParser\Node\Arg;
 use PhpParser\Node\Scalar\String_;
 use PhpParser\Node\Stmt;
 use PhpParser\NodeVisitorAbstract;
+use PhpStaticAnalysis\Attributes\DefineType;
 use PhpStaticAnalysis\Attributes\Deprecated;
 use PhpStaticAnalysis\Attributes\Immutable;
+use PhpStaticAnalysis\Attributes\ImportType;
 use PhpStaticAnalysis\Attributes\Impure;
 use PhpStaticAnalysis\Attributes\Internal;
 use PhpStaticAnalysis\Attributes\IsReadOnly;
@@ -50,6 +52,7 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
     private const ARGS_TWO_WITH_TYPE = 'two with type';
     private const ARGS_MANY_IN_USE = "many in use";
     private const ARGS_MANY_WITH_NAME = "many with name";
+    private const ARGS_MANY_IN_TYPE = "many in type";
     private const ARGS_MANY_WITHOUT_NAME = "many without name";
     private const ARGS_MANY_WITHOUT_NAME_AND_PREFIX = "many without name and prexif";
 
@@ -65,8 +68,10 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
 
     private const ALLOWED_ATTRIBUTES_PER_NODE_TYPE = [
         Stmt\Class_::class => [
+            DefineType::class,
             Deprecated::class,
             Immutable::class,
+            ImportType::class,
             Internal::class,
             Method::class,
             Mixin::class,
@@ -79,6 +84,7 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
             TemplateExtends::class,
             TemplateImplements::class,
             TemplateUse::class,
+            Type::class,
         ],
         Stmt\ClassConst::class => [
             Deprecated::class,
@@ -111,8 +117,10 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
             Type::class,
         ],
         Stmt\Interface_::class => [
+            DefineType::class,
             Deprecated::class,
             Immutable::class,
+            ImportType::class,
             Internal::class,
             Method::class,
             Mixin::class,
@@ -122,6 +130,7 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
             Template::class,
             TemplateContravariant::class,
             TemplateCovariant::class,
+            Type::class,
         ],
         Stmt\Property::class => [
             Deprecated::class,
@@ -131,8 +140,10 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
             Type::class,
         ],
         Stmt\Trait_::class => [
+            DefineType::class,
             Deprecated::class,
             Immutable::class,
+            ImportType::class,
             Internal::class,
             Method::class,
             Mixin::class,
@@ -144,12 +155,15 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
             Template::class,
             TemplateContravariant::class,
             TemplateCovariant::class,
+            Type::class,
         ],
     ];
 
     private const SHORT_NAME_TO_FQN = [
+        'DefineType' => DefineType::class,
         'Deprecated' => Deprecated::class,
         'Immutable' => Immutable::class,
+        'ImportType' => ImportType::class,
         'Impure' => Impure::class,
         'Internal' => Internal::class,
         'IsReadOnly' => IsReadOnly::class,
@@ -176,11 +190,17 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
     ];
 
     private const ANNOTATION_PER_ATTRIBUTE = [
+        DefineType::class => [
+            'all' => 'type',
+        ],
         Deprecated::class => [
             'all' => 'deprecated',
         ],
         Immutable::class => [
             'all' => 'immutable',
+        ],
+        ImportType::class => [
+            'all' => 'import-type',
         ],
         Impure::class => [
             'all' => 'impure',
@@ -250,6 +270,7 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
             'all' => 'throws',
         ],
         Type::class => [
+            Stmt\Class_::class => 'type',
             Stmt\ClassConst::class => 'var',
             Stmt\ClassMethod::class => 'return',
             Stmt\Function_::class => 'return',
@@ -258,11 +279,17 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
     ];
 
     private const ARGUMENTS_PER_ATTRIBUTE = [
+        DefineType::class => [
+            'all' => self::ARGS_MANY_IN_TYPE,
+        ],
         Deprecated::class => [
             'all' => self::ARGS_NONE,
         ],
         Immutable::class => [
             'all' => self::ARGS_NONE_WITH_PREFIX,
+        ],
+        ImportType::class => [
+            'all' => self::ARGS_MANY_IN_TYPE,
         ],
         Impure::class => [
             'all' => self::ARGS_NONE_WITH_PREFIX,
@@ -447,6 +474,12 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
                                     }
                                 }
                                 break;
+                            case self::ARGS_MANY_IN_TYPE:
+                                foreach ($args as $arg) {
+                                    $tagsToAdd[] = $this->createTag($nodeType, $attributeName, $arg, prefixWithName: true, prefix: $this->toolType);
+                                    $tagCreated = true;
+                                }
+                                break;
                         }
                         if ($tagCreated) {
                             $this->updatePositions($attribute);
@@ -474,7 +507,8 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
         Arg $of = null,
         bool $useName = false,
         string $nameToUse = null,
-        string $prefix = null
+        string $prefix = null,
+        bool $prefixWithName = false
     ): string {
         if (array_key_exists($nodeType, self::ANNOTATION_PER_ATTRIBUTE[$attributeName])) {
             $tagName = self::ANNOTATION_PER_ATTRIBUTE[$attributeName][$nodeType];
@@ -500,6 +534,15 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
                 $type = (string)$value->class;
                 if ($this->toolType === self::TOOL_PHPSTAN) {
                     $type = '\\' . $type;
+                }
+            }
+            if ($prefixWithName) {
+                $alias = $argument->name;
+                if ($alias instanceof Node\Identifier) {
+                    if ($attributeName === ImportType::class) {
+                        $type = 'from ' . $type;
+                    }
+                    $type = $alias->toString() . ' ' . $type;
                 }
             }
             if ($type !== '') {
