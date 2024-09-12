@@ -11,6 +11,9 @@ use PhpParser\Node\Arg;
 use PhpParser\Node\Scalar\String_;
 use PhpParser\Node\Stmt;
 use PhpParser\NodeVisitorAbstract;
+use PhpStaticAnalysis\Attributes\Assert;
+use PhpStaticAnalysis\Attributes\AssertIfFalse;
+use PhpStaticAnalysis\Attributes\AssertIfTrue;
 use PhpStaticAnalysis\Attributes\DefineType;
 use PhpStaticAnalysis\Attributes\Deprecated;
 use PhpStaticAnalysis\Attributes\Immutable;
@@ -92,6 +95,9 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
             Type::class,
         ],
         Stmt\ClassMethod::class => [
+            Assert::class,
+            AssertIfFalse::class,
+            AssertIfTrue::class,
             Deprecated::class,
             Impure::class,
             Internal::class,
@@ -105,6 +111,9 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
             Type::class,
         ],
         Stmt\Function_::class => [
+            Assert::class,
+            AssertIfFalse::class,
+            AssertIfTrue::class,
             Deprecated::class,
             Impure::class,
             Internal::class,
@@ -160,6 +169,9 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
     ];
 
     private const SHORT_NAME_TO_FQN = [
+        'Assert' => Assert::class,
+        'AssertIfFalse' => AssertIfFalse::class,
+        'AssertIfTrue' => AssertIfTrue::class,
         'DefineType' => DefineType::class,
         'Deprecated' => Deprecated::class,
         'Immutable' => Immutable::class,
@@ -190,6 +202,15 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
     ];
 
     private const ANNOTATION_PER_ATTRIBUTE = [
+        Assert::class => [
+            'all' => 'assert',
+        ],
+        AssertIfFalse::class => [
+            'all' => 'assert-if-false',
+        ],
+        AssertIfTrue::class => [
+            'all' => 'assert-if-true',
+        ],
         DefineType::class => [
             'all' => 'type',
         ],
@@ -279,6 +300,15 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
     ];
 
     private const ARGUMENTS_PER_ATTRIBUTE = [
+        Assert::class => [
+            'all' => self::ARGS_MANY_WITH_NAME,
+        ],
+        AssertIfFalse::class => [
+            'all' => self::ARGS_MANY_WITH_NAME,
+        ],
+        AssertIfTrue::class => [
+            'all' => self::ARGS_MANY_WITH_NAME,
+        ],
         DefineType::class => [
             'all' => self::ARGS_MANY_IN_TYPE,
         ],
@@ -379,7 +409,15 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
     public function enterNode(Node $node)
     {
         if (in_array($node::class, self::ALLOWED_NODE_TYPES)) {
-            /** @var Stmt\Class_|Stmt\ClassConst|Stmt\ClassMethod|Stmt\Function_|Stmt\Interface_|Stmt\Property|Stmt\Trait_ $node */
+            assert(
+                $node instanceof Stmt\Class_ ||
+                $node instanceof Stmt\ClassConst ||
+                $node instanceof Stmt\ClassMethod ||
+                $node instanceof Stmt\Function_ ||
+                $node instanceof Stmt\Interface_ ||
+                $node instanceof Stmt\Property ||
+                $node instanceof Stmt\Trait_
+            );
             $tagsToAdd = [];
             $useTagsToAdd = [];
             $attributeGroups = $node->attrGroups;
@@ -584,7 +622,12 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
                 foreach ($attributes as $attribute) {
                     $attributeName = $attribute->name->toString();
                     $attributeName = self::SHORT_NAME_TO_FQN[$attributeName] ?? $attributeName;
-                    if ($attributeName === Param::class || $attributeName === ParamOut::class) {
+                    if ($attributeName === Param::class ||
+                        $attributeName === ParamOut::class ||
+                        $attributeName === Assert::class ||
+                        $attributeName === AssertIfFalse::class ||
+                        $attributeName === AssertIfTrue::class
+                    ) {
                         $args = $attribute->args;
                         $tagCreated = false;
                         if (isset($args[0])) {

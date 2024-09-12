@@ -25,7 +25,7 @@
     "require": {
         "php": ">=8.0",
         "nikic/php-parser": "^4 || ^5",
-        "php-static-analysis/attributes": "^0.3.0 || dev-main"
+        "php-static-analysis/attributes": "^0.3.1 || dev-main"
     },
     "require-dev": {
         "php-static-analysis/phpstan-extension": "dev-main",
