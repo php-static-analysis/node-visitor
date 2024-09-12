@@ -684,10 +684,10 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
     #[Param(useTagsToAdd: 'string[]')]
     private function addUseDocTagsToNodeTraitUses(array $useTagsToAdd, Stmt\Class_ $node): void
     {
-        $this->initPositions();
         foreach ($node->stmts as $stmt) {
             if ($stmt instanceof Stmt\TraitUse) {
                 foreach ($stmt->traits as $trait) {
+                    $this->initPositions();
                     foreach ($useTagsToAdd as $tagValue => $useTag) {
                         $tagParts = explode('<', (string)$tagValue);
                         $tagName = $tagParts[0];
@@ -701,6 +701,7 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
                             }
                         }
                         if ($useMatches) {
+                            $this->updatePositions($stmt);
                             $this->addDocTagsToNode([$useTag], $stmt);
                             unset($useTagsToAdd[$tagName]);
                             break;
