@@ -26,7 +26,7 @@ class InternalAttributeNodeVisitorTest extends AttributeNodeVisitorTestBase
         $this->addInternalAttributeToNode($node, true);
         $this->nodeVisitor->enterNode($node);
         $docText = $this->getDocText($node);
-        $this->assertEquals("/**\n * @internal A\B\n */", $docText);
+        $this->assertEquals("/**\n * @psalm-internal A\B\n */", $docText);
     }
 
     public function testDoesNotAddToolPrefixToAnnotationIfNotPsalm(): void

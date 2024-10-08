@@ -55,6 +55,7 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
     private const ARGS_TWO_WITH_TYPE = 'two with type';
     private const ARGS_MANY_IN_USE = "many in use";
     private const ARGS_MANY_WITH_NAME = "many with name";
+    private const ARGS_MANY_WITH_NAME_WITH_PREFIX = "many with name with prefix";
     private const ARGS_MANY_IN_TYPE = "many in type";
     private const ARGS_MANY_WITHOUT_NAME = "many without name";
     private const ARGS_MANY_WITHOUT_NAME_AND_PREFIX = "many without name and prexif";
@@ -246,6 +247,8 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
         ],
         Property::class => [
             Stmt\Class_::class => 'property',
+            Stmt\Interface_::class => 'property',
+            Stmt\Trait_::class => 'property',
             Stmt\Property::class => 'var',
         ],
         PropertyRead::class => [
@@ -301,13 +304,13 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
 
     private const ARGUMENTS_PER_ATTRIBUTE = [
         Assert::class => [
-            'all' => self::ARGS_MANY_WITH_NAME,
+            'all' => self::ARGS_MANY_WITH_NAME_WITH_PREFIX,
         ],
         AssertIfFalse::class => [
-            'all' => self::ARGS_MANY_WITH_NAME,
+            'all' => self::ARGS_MANY_WITH_NAME_WITH_PREFIX,
         ],
         AssertIfTrue::class => [
-            'all' => self::ARGS_MANY_WITH_NAME,
+            'all' => self::ARGS_MANY_WITH_NAME_WITH_PREFIX,
         ],
         DefineType::class => [
             'all' => self::ARGS_MANY_IN_TYPE,
@@ -344,6 +347,8 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
         ],
         Property::class => [
             Stmt\Class_::class => self::ARGS_MANY_WITH_NAME,
+            Stmt\Interface_::class => self::ARGS_MANY_WITH_NAME,
+            Stmt\Trait_::class => self::ARGS_MANY_WITH_NAME,
             Stmt\Property::class => self::ARGS_ONE,
         ],
         PropertyRead::class => [
@@ -425,9 +430,9 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
 
             $this->initPositions();
 
-            foreach ($attributeGroups as $attributeGroup) {
+            foreach ($attributeGroups as $groupKey => $attributeGroup) {
                 $attributes = $attributeGroup->attrs;
-                foreach ($attributes as $attribute) {
+                foreach ($attributes as $key => $attribute) {
                     $attributeName = $attribute->name->toString();
                     $attributeName = self::SHORT_NAME_TO_FQN[$attributeName] ?? $attributeName;
                     if (
@@ -473,7 +478,7 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
                                         $nodeType,
                                         $attributeName,
                                         $args[0],
-                                        prefix: $this->toolType === self::TOOL_PSALM ? $this->toolType : null
+                                        prefix: self::TOOL_PSALM
                                     );
                                 } else {
                                     $tagsToAdd[] = $this->createTag($nodeType, $attributeName);
@@ -489,6 +494,12 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
                             case self::ARGS_MANY_WITH_NAME:
                                 foreach ($args as $arg) {
                                     $tagsToAdd[] = $this->createTag($nodeType, $attributeName, $arg, useName: true);
+                                    $tagCreated = true;
+                                }
+                                break;
+                            case self::ARGS_MANY_WITH_NAME_WITH_PREFIX:
+                                foreach ($args as $arg) {
+                                    $tagsToAdd[] = $this->createTag($nodeType, $attributeName, $arg, useName: true, prefix: $this->toolType);
                                     $tagCreated = true;
                                 }
                                 break;
@@ -509,6 +520,7 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
                                     if ($arg->value instanceof String_) {
                                         $useValue = $arg->value->value;
                                         $useTagsToAdd[$useValue] = $this->createTag($nodeType, $attributeName, $arg);
+                                        $tagCreated = true;
                                     }
                                 }
                                 break;
@@ -521,10 +533,17 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
                         }
                         if ($tagCreated) {
                             $this->updatePositions($attribute);
+                            unset($attributes[$key]);
                         }
                     }
                 }
+                if ($attributes === []) {
+                    unset($attributeGroups[$groupKey]);
+                } else {
+                    $attributeGroup->attrs = $attributes;
+                }
             }
+            $node->attrGroups = $attributeGroups;
             if ($node instanceof Stmt\ClassMethod || $node instanceof Stmt\Function_) {
                 $tagsToAdd = array_merge($tagsToAdd, $this->getParamTagsFromParams($node));
             }
@@ -541,11 +560,11 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
     private function createTag(
         string $nodeType,
         string $attributeName,
-        Arg $argument = null,
-        Arg $of = null,
+        ?Arg $argument = null,
+        ?Arg $of = null,
         bool $useName = false,
-        string $nameToUse = null,
-        string $prefix = null,
+        ?string $nameToUse = null,
+        ?string $prefix = null,
         bool $prefixWithName = false
     ): string {
         if (array_key_exists($nodeType, self::ANNOTATION_PER_ATTRIBUTE[$attributeName])) {
