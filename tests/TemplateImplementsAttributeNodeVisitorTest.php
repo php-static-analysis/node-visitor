@@ -8,7 +8,7 @@ use PhpParser\Node\AttributeGroup;
 use PhpParser\Node\Name\FullyQualified;
 use PhpStaticAnalysis\Attributes\TemplateImplements;
 
-class TemplateImplementsAttributeNodeVisitorTest extends AttributeNodeVisitorTestBase
+final class TemplateImplementsAttributeNodeVisitorTest extends AttributeNodeVisitorTestBase
 {
     public function testAddsTemplateImplementsPHPDoc(): void
     {

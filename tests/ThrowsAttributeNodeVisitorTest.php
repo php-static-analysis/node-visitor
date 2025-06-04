@@ -9,7 +9,7 @@ use PhpParser\Node\AttributeGroup;
 use PhpParser\Node\Name\FullyQualified;
 use PhpStaticAnalysis\Attributes\Throws;
 
-class ThrowsAttributeNodeVisitorTest extends AttributeNodeVisitorTestBase
+final class ThrowsAttributeNodeVisitorTest extends AttributeNodeVisitorTestBase
 {
     public function testAddsThrowsPHPDoc(): void
     {

@@ -9,7 +9,7 @@ use PhpParser\Node\AttributeGroup;
 use PhpParser\Node\Name\FullyQualified;
 use PhpStaticAnalysis\Attributes\TemplateCovariant;
 
-class TemplateCovariantAttributeNodeVisitorTest extends AttributeNodeVisitorTestBase
+final class TemplateCovariantAttributeNodeVisitorTest extends AttributeNodeVisitorTestBase
 {
     public function testAddsTemplateCovariantPHPDoc(): void
     {

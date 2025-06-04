@@ -9,7 +9,7 @@ use PhpParser\Node\Identifier;
 use PhpParser\Node\Name\FullyQualified;
 use PhpStaticAnalysis\Attributes\AssertIfFalse;
 
-class AssertIfFalseAttributeNodeVisitorTest extends AttributeNodeVisitorTestBase
+final class AssertIfFalseAttributeNodeVisitorTest extends AttributeNodeVisitorTestBase
 {
     public function testAddsAssertIfFalsePHPDoc(): void
     {

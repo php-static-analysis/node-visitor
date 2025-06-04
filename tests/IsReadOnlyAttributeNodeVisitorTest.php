@@ -4,7 +4,7 @@ namespace test\PhpStaticAnalysis\NodeVisitor;
 
 use PhpParser\Node;
 
-class IsReadOnlyAttributeNodeVisitorTest extends AttributeNodeVisitorTestBase
+final class IsReadOnlyAttributeNodeVisitorTest extends AttributeNodeVisitorTestBase
 {
     public function testAddsReadOnlyPHPDoc(): void
     {

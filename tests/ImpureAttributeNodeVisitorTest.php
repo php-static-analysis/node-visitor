@@ -8,7 +8,7 @@ use PhpParser\Node\AttributeGroup;
 use PhpParser\Node\Name\FullyQualified;
 use PhpStaticAnalysis\Attributes\Impure;
 
-class ImpureAttributeNodeVisitorTest extends AttributeNodeVisitorTestBase
+final class ImpureAttributeNodeVisitorTest extends AttributeNodeVisitorTestBase
 {
     public function testAddsImpurePHPDoc(): void
     {

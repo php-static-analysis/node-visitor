@@ -9,7 +9,7 @@ use PhpParser\Node\AttributeGroup;
 use PhpParser\Node\Name\FullyQualified;
 use PhpStaticAnalysis\Attributes\TemplateContravariant;
 
-class TemplateContravariantAttributeNodeVisitorTest extends AttributeNodeVisitorTestBase
+final class TemplateContravariantAttributeNodeVisitorTest extends AttributeNodeVisitorTestBase
 {
     public function testAddsTemplateContravariantPHPDoc(): void
     {

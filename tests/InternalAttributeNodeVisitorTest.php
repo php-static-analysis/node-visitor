@@ -9,7 +9,7 @@ use PhpParser\Node\Name\FullyQualified;
 use PhpStaticAnalysis\Attributes\Internal;
 use PhpStaticAnalysis\NodeVisitor\AttributeNodeVisitor;
 
-class InternalAttributeNodeVisitorTest extends AttributeNodeVisitorTestBase
+final class InternalAttributeNodeVisitorTest extends AttributeNodeVisitorTestBase
 {
     public function testAddsInternalPHPDoc(): void
     {

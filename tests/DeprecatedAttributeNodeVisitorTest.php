@@ -8,7 +8,7 @@ use PhpParser\Node\AttributeGroup;
 use PhpParser\Node\Name\FullyQualified;
 use PhpStaticAnalysis\Attributes\Deprecated;
 
-class DeprecatedAttributeNodeVisitorTest extends AttributeNodeVisitorTestBase
+final class DeprecatedAttributeNodeVisitorTest extends AttributeNodeVisitorTestBase
 {
     public function testAddsDeprecatedPHPDoc(): void
     {

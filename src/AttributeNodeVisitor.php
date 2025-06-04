@@ -42,7 +42,7 @@ use PhpStaticAnalysis\Attributes\TemplateUse;
 use PhpStaticAnalysis\Attributes\Throws;
 use PhpStaticAnalysis\Attributes\Type;
 
-class AttributeNodeVisitor extends NodeVisitorAbstract
+final class AttributeNodeVisitor extends NodeVisitorAbstract
 {
     public const TOOL_PHPSTAN = 'phpstan';
     public const TOOL_PSALM = 'psalm';
@@ -411,7 +411,7 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
         $this->initPositions();
     }
 
-    public function enterNode(Node $node)
+    public function enterNode(Node $node): ?Node
     {
         if (in_array($node::class, self::ALLOWED_NODE_TYPES)) {
             assert(
@@ -441,13 +441,16 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
                             self::ALLOWED_ATTRIBUTES_PER_NODE_TYPE[$nodeType]
                         )
                     ) {
+                        assert(array_key_exists($attributeName, self::ARGUMENTS_PER_ATTRIBUTE));
                         $args = $attribute->args;
                         $tagCreated = false;
 
-                        if (array_key_exists($nodeType, self::ARGUMENTS_PER_ATTRIBUTE[$attributeName])) {
-                            $argumentType = self::ARGUMENTS_PER_ATTRIBUTE[$attributeName][$nodeType];
-                        } elseif (array_key_exists('all', self::ARGUMENTS_PER_ATTRIBUTE[$attributeName])) {
-                            $argumentType = self::ARGUMENTS_PER_ATTRIBUTE[$attributeName]['all'];
+                        $attributeArguments = self::ARGUMENTS_PER_ATTRIBUTE[$attributeName];
+                        /** @psalm-suppress InvalidArrayOffset */
+                        if (isset($attributeArguments[$nodeType])) {
+                            $argumentType = $attributeArguments[$nodeType];
+                        } elseif (isset($attributeArguments['all'])) {
+                            $argumentType = $attributeArguments['all'];
                         } else {
                             continue;
                         }
@@ -553,8 +556,9 @@ class AttributeNodeVisitor extends NodeVisitorAbstract
             if ($useTagsToAdd !== [] && $node instanceof Stmt\Class_) {
                 $this->addUseDocTagsToNodeTraitUses($useTagsToAdd, $node);
             }
+            return $node;
         }
-        return $node;
+        return null;
     }
 
     private function createTag(

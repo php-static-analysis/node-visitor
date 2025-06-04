@@ -9,7 +9,7 @@ use PhpParser\Node\Identifier;
 use PhpParser\Node\Name\FullyQualified;
 use PhpStaticAnalysis\Attributes\PropertyRead;
 
-class PropertyReadAttributeNodeVisitorTest extends AttributeNodeVisitorTestBase
+final class PropertyReadAttributeNodeVisitorTest extends AttributeNodeVisitorTestBase
 {
     public function testAddsPropertyReadPHPDoc(): void
     {

@@ -9,7 +9,7 @@ use PhpParser\Node\AttributeGroup;
 use PhpParser\Node\Name\FullyQualified;
 use PhpStaticAnalysis\Attributes\Mixin;
 
-class MixinAttributeNodeVisitorTest extends AttributeNodeVisitorTestBase
+final class MixinAttributeNodeVisitorTest extends AttributeNodeVisitorTestBase
 {
     public function testAddsMixinPHPDoc(): void
     {
@@ -55,6 +55,6 @@ class MixinAttributeNodeVisitorTest extends AttributeNodeVisitorTestBase
 
 namespace other;
 
-class A
+final class A
 {
 }

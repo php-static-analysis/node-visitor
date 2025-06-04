@@ -4,7 +4,7 @@ namespace test\PhpStaticAnalysis\NodeVisitor;
 
 use PhpParser\Node;
 
-class AttributeNodeVisitorTest extends AttributeNodeVisitorTestBase
+final class AttributeNodeVisitorTest extends AttributeNodeVisitorTestBase
 {
     public function testDoesNotProcessUnknownNodes(): void
     {

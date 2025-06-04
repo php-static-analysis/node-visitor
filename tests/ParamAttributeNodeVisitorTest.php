@@ -9,7 +9,7 @@ use PhpParser\Node\Identifier;
 use PhpParser\Node\Name\FullyQualified;
 use PhpStaticAnalysis\Attributes\Param;
 
-class ParamAttributeNodeVisitorTest extends AttributeNodeVisitorTestBase
+final class ParamAttributeNodeVisitorTest extends AttributeNodeVisitorTestBase
 {
     public function testAddsParamPHPDoc(): void
     {
