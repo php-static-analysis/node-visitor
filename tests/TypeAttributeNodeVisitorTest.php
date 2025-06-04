@@ -8,7 +8,7 @@ use PhpParser\Node\AttributeGroup;
 use PhpParser\Node\Name\FullyQualified;
 use PhpStaticAnalysis\Attributes\Type;
 
-class TypeAttributeNodeVisitorTest extends AttributeNodeVisitorTestBase
+final class TypeAttributeNodeVisitorTest extends AttributeNodeVisitorTestBase
 {
     public function testAddsVarPHPDoc(): void
     {

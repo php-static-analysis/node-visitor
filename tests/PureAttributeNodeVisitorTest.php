@@ -8,7 +8,7 @@ use PhpParser\Node\AttributeGroup;
 use PhpParser\Node\Name\FullyQualified;
 use PhpStaticAnalysis\Attributes\Pure;
 
-class PureAttributeNodeVisitorTest extends AttributeNodeVisitorTestBase
+final class PureAttributeNodeVisitorTest extends AttributeNodeVisitorTestBase
 {
     public function testAddsPurePHPDoc(): void
     {

@@ -9,7 +9,7 @@ use PhpParser\Node\AttributeGroup;
 use PhpParser\Node\Name\FullyQualified;
 use PhpStaticAnalysis\Attributes\RequireExtends;
 
-class RequireExtendsAttributeNodeVisitorTest extends AttributeNodeVisitorTestBase
+final class RequireExtendsAttributeNodeVisitorTest extends AttributeNodeVisitorTestBase
 {
     public function testAddsRequireExtendsPHPDoc(): void
     {
@@ -34,6 +34,6 @@ class RequireExtendsAttributeNodeVisitorTest extends AttributeNodeVisitorTestBas
 
 namespace other;
 
-class RequireClass
+final class RequireClass
 {
 }

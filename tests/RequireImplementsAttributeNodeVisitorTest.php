@@ -9,7 +9,7 @@ use PhpParser\Node\AttributeGroup;
 use PhpParser\Node\Name\FullyQualified;
 use PhpStaticAnalysis\Attributes\RequireImplements;
 
-class RequireImplementsAttributeNodeVisitorTest extends AttributeNodeVisitorTestBase
+final class RequireImplementsAttributeNodeVisitorTest extends AttributeNodeVisitorTestBase
 {
     public function testAddsRequireImplementsPHPDoc(): void
     {

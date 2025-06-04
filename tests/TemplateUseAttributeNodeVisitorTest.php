@@ -11,7 +11,7 @@ use PhpParser\Node\Name\FullyQualified;
 use PhpStaticAnalysis\Attributes\Param;
 use PhpStaticAnalysis\Attributes\TemplateUse;
 
-class TemplateUseAttributeNodeVisitorTest extends AttributeNodeVisitorTestBase
+final class TemplateUseAttributeNodeVisitorTest extends AttributeNodeVisitorTestBase
 {
     public function testAddsTemplateUsePHPDoc(): void
     {

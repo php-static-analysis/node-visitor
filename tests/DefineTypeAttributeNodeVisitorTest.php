@@ -9,7 +9,7 @@ use PhpParser\Node\Identifier;
 use PhpParser\Node\Name\FullyQualified;
 use PhpStaticAnalysis\Attributes\DefineType;
 
-class DefineTypeAttributeNodeVisitorTest extends AttributeNodeVisitorTestBase
+final class DefineTypeAttributeNodeVisitorTest extends AttributeNodeVisitorTestBase
 {
     public function testAddsDefineTypePHPDoc(): void
     {

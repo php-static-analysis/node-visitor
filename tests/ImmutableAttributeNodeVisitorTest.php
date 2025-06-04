@@ -8,7 +8,7 @@ use PhpParser\Node\Name\FullyQualified;
 use PhpStaticAnalysis\Attributes\Immutable;
 use test\PhpStaticAnalysis\NodeVisitor\AttributeNodeVisitorTestBase;
 
-class ImmutableAttributeNodeVisitorTest extends AttributeNodeVisitorTestBase
+final class ImmutableAttributeNodeVisitorTest extends AttributeNodeVisitorTestBase
 {
     public function testAddsImmutablePHPDoc(): void
     {
